@@ -488,6 +488,9 @@ def prepare_ocp(
     u_init.add([tau_init] * biorbd_model[0].nb_tau)
     u_init.add([tau_init] * biorbd_model[0].nb_tau)
 
+    biorbd_model[0].contact_forces_from_constrained_forward_dynamics(states["q"], biorbd_model.model.states["qdot"],
+                                                                     biorbd_model.model.control["tau"])
+
     return OptimalControlProgram(
         biorbd_model,
         dynamics,
@@ -539,7 +542,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/V_1.pckl",
+            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/PS.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
