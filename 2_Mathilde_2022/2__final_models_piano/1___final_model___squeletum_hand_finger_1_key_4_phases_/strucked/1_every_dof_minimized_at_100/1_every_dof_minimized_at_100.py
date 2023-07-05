@@ -2,7 +2,7 @@
  !! Les axes du modèle ne sont pas les mêmes que ceux généralement utilisés en biomécanique : x axe de flexion, y supination/pronation, z vertical
  ici on a : Y -» X , Z-» Y et X -» Z
  """
-from casadi import MX, acos, dot, pi
+from casadi import MX, acos, dot, pi, Function
 import time
 import bioviz
 import numpy as np
@@ -502,8 +502,21 @@ def main():
     solv.set_linear_solver("ma57")
     tic = time.time()
     sol = ocp.solve(solv)
-    #
-    # # # # --- Take important states for Finger_Marker_5 and Finger_marker --- # #
+
+    q_sym = MX.sym('q_sym', 10, 1)
+    qdot_sym = MX.sym('qdot_sym', 10, 1)
+    tau_sym = MX.sym('tau_sym', 10, 1)
+    Calculaing_Force = Function("blabla", [q_sym, qdot_sym, tau_sym], [
+        ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+
+    rows = 7
+    cols = 3
+    F = [[0] * cols for _ in range(rows)]
+
+    for i in range(0, 7):
+        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i], sol.controls[2]['tau'][:, i])
+
+    F_array = np.array(F)
 
     # # # --- Download datas on a .pckl file --- #
 
@@ -519,6 +532,7 @@ def main():
         param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
         phase_time=sol.phase_time,
         Time=sol.time,
+        Force_values=F_array,
 
     )
 
