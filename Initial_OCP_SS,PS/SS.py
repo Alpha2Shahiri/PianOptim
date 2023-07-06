@@ -4,7 +4,6 @@
  """
 from casadi import MX, acos, dot, pi, Function
 import time
-import bioviz
 import numpy as np
 import biorbd_casadi as biorbd
 import pickle
@@ -537,7 +536,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/strucked/Results/V_1.pckl", "wb") as file:
+            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/strucked/Results/SS.pckl", "wb") as file:
         pickle.dump(data, file)
 
     # # --- Print results --- # #
