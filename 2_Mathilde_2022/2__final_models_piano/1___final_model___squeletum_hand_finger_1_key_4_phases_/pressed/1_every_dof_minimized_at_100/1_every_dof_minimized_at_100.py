@@ -27,6 +27,8 @@ from bioptim import (
     OdeSolver,
     Solver,
     MultinodeObjectiveList,
+    Node,
+    Axis,
 )
 #
 # def minimize_difference(all_pn: PenaltyNode):
@@ -168,7 +170,20 @@ def prepare_ocp(
     )
 
     # To block ulna rotation before the key pressing.
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100000, index=[7])
+
+    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100000, index=[3, 7])
+
+    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100000, index=[3, 7])
+
+    # To block ulna rotation before the key pressing.
+
+    objective_functions.add(ObjectiveFcn.Mayer.MINIMIZE_COM_POSITION, weight=-1, phase=3, node=Node.INTERMEDIATES)
+
+    objective_functions.add(
+
+        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-1, segment="humerus_right", axes=[Axis.Z]
+
+    )
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
