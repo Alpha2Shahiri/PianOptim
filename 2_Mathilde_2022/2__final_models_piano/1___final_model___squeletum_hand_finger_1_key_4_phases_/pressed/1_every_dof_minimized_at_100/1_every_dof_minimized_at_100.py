@@ -170,20 +170,18 @@ def prepare_ocp(
     )
 
     # To block ulna rotation before the key pressing.
-
     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100000, index=[3, 7])
 
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100000, index=[3, 7])
+    # objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100000, index=[3, 7])
 
-    # To block ulna rotation before the key pressing.
-
-    objective_functions.add(ObjectiveFcn.Mayer.MINIMIZE_COM_POSITION, weight=-1, phase=3, node=Node.INTERMEDIATES)
+    # MAXIMIZE COM_HEIGHT and SEGMENT ROTATION
+    # objective_functions.add(ObjectiveFcn.Mayer.MINIMIZE_PREDICTED_COM_HEIGHT, weight=-1, phase=3, node=Node.ALL)
 
     objective_functions.add(
-
         ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-1, segment="humerus_right", axes=[Axis.Z]
-
     )
+
+    # objective_functions.add(ObjectiveFcn.Mayer.MINIMIZE_STATE, key="q", weight=-1, phase=3, node=Node.ALL, index=6)
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
@@ -569,7 +567,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/PS.pckl",
+            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/COM_New.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
