@@ -27,6 +27,7 @@ from bioptim import (
     OdeSolver,
     Solver,
     MultinodeObjectiveList,
+    Axis,
 )
 #
 # def minimize_difference(all_pn: PenaltyNode):
@@ -191,11 +192,20 @@ def prepare_ocp(
 
     # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3,7])
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 7])
 
-    # for i in [0, 1, 2, 3]:
-    #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=100000, index=[3])
-    #
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_COM_POSITION, phase=3, weight=-10000, axes=[Axis.Z], quadratic=False
+    )
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[6])
+
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-10000, segment="humerus_right", axes=[Axis.Z], quadratic=False)
+
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
         target=vel_push_array2,
@@ -293,7 +303,7 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100, index=[8, 9], derivative=True
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
     )
 
 
@@ -487,6 +497,7 @@ def prepare_ocp(
     x_bounds[0][[0, 1, 2], 0] = 0
     x_bounds[3][[0, 1, 2], 2] = 0
 
+    x_bounds[3].max[[5], 1] = 1.2
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -565,7 +576,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/alldofs_pressedTouch_power.pckl",
+            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/Rotation_PDP_1.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
