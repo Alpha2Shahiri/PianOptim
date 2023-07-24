@@ -144,16 +144,16 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 5, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 5]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 5, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 5]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4]
     )
 
     for i in [0, 3]:
@@ -161,6 +161,18 @@ def prepare_ocp(
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5]
         )
 
+    for j in [6,7]:
+        for i in [0, 1, 2, 3]:
+            objective_functions.add(
+                    Minimize_Power,
+                    custom_type=ObjectiveFcn.Lagrange,
+                    segment_idx=[j],
+                    node=Node.ALL_SHOOTING,
+                    quadratic=True,
+                    phase=i,
+                    method=1,
+                    weight=1000,
+                )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
     for j in [8, 9]:
@@ -173,7 +185,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=100,
+                    weight=1000,
                 )
 
 
