@@ -2,11 +2,13 @@
  !! Les axes du modèle ne sont pas les mêmes que ceux généralement utilisés en biomécanique : x axe de flexion, y supination/pronation, z vertical
  ici on a : Y -» X , Z-» Y et X -» Z
  """
-from casadi import MX, acos, dot, pi
+from casadi import MX, acos, dot, pi, Function
 import time
 import numpy as np
 import biorbd_casadi as biorbd
 import pickle
+import os
+import gc
 
 from bioptim import (
     BiorbdModel,
@@ -90,6 +92,7 @@ def Minimize_Power(controller: PenaltyController, segment_idx:int, method:int):
 
 
 def prepare_ocp(
+    tau_x,
     biorbd_model_path: str = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/bioMod/Squeletum_hand_finger_3D_2_keys_octave_LA.bioMod",
     ode_solver: OdeSolver = OdeSolver.COLLOCATION(polynomial_degree=4),
     # assume_phase_dynamics: bool = True,
@@ -185,7 +188,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=100000,
+                    weight= tau_x,
                 )
 
 
@@ -553,24 +556,43 @@ def prepare_ocp(
     )
 
 
-def main():
-    """
-    Defines a multiphase ocp and animate the results
-    """
+tau_minimization_weight = []
+for i in range(1, 10):
+    tau_minimization_weight.append(i * 100)
 
-    ocp = prepare_ocp()
+# Multiples of 1000
+for i in range(1, 20):
+    tau_minimization_weight.append(i * 1000)
+
+for  tau_x in tau_minimization_weight:
+
+    ocp = prepare_ocp(tau_x)
     ocp.add_plot_penalty(CostType.ALL)
 
     # # --- Solve the program --- # #
 
-    solv = Solver.IPOPT(show_online_optim=True)
-    solv.set_maximum_iterations(1000000)
+    solv = Solver.IPOPT(show_online_optim=False)
+    solv.set_maximum_iterations(100000000)
     solv.set_linear_solver("ma57")
     tic = time.time()
     sol = ocp.solve(solv)
 
-
     # # --- Download datas on a .pckl file --- #
+    q_sym = MX.sym('q_sym', 10, 1)
+    qdot_sym = MX.sym('qdot_sym', 10, 1)
+    tau_sym = MX.sym('tau_sym', 10, 1)
+    Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [
+        ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+
+    rows = 7
+    cols = 3
+    F = [[0] * cols for _ in range(rows)]
+
+    for i in range(0, 7):
+        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
+                                sol.controls[2]['tau'][:, i])
+
+    F_array = np.array(F)
 
     data = dict(
         states=sol.states,
@@ -584,27 +606,27 @@ def main():
         param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
         phase_time=sol.phase_time,
         Time=sol.time,
+        Force_Values=F_array,
 
     )
 
-    with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/Distal_2.pckl",
-            "wb") as file:
+    directory = "/home/alpha/Desktop/July/PT_Wrist"
+
+    # Create the directory if it doesn't exist
+    os.makedirs(directory, exist_ok=True)
+
+    name = str(tau_x) + ".pckl"
+
+    # Combine the directory path and filename
+    filepath = os.path.join(directory, name)
+
+    # Open the file in write mode and save the data
+    with open(filepath, "wb") as file:
         pickle.dump(data, file)
 
-    print("Tesults saved")
-    print("Temps de resolution : ", time.time() - tic, "s")
+    del ocp
+    del solv
+    del sol
 
-    sol.print_cost()
-    ocp.print(to_console=False, to_graph=False)
-    # sol.graphs(show_bounds=True)
-    sol.animate(show_floor=False, show_global_center_of_mass=False, show_segments_center_of_mass=False, show_global_ref_frame=True, show_local_ref_frame=False, show_markers=False, n_frames=250,)
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    main()
+    # Run garbage collection
+    gc.collect()
