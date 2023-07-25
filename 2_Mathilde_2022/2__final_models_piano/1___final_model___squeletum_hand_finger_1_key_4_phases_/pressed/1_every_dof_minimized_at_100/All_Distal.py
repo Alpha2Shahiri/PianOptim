@@ -557,18 +557,28 @@ def prepare_ocp(
 
 
 tau_minimization_weight = []
-for i in range(1, 10, 3):
+for i in range(1, 10):
     tau_minimization_weight.append(i * 100)
+
 # Multiples of 1000
-for i in range(1, 10, 3):
+for i in range(1, 10):
     tau_minimization_weight.append(i * 1000)
 # Multiples of 1000
-for i in range(1, 10, 2):
+for i in range(1, 10):
     tau_minimization_weight.append(i * 10000)
+percentages = [0.1, 0.5, 1.0]
+
+# Calculate objective values for each tau_minimization_weight
+objective_values = []
+
+for weight in tau_minimization_weight:
+    for percentage in percentages:
+        objective_values.append(weight * percentage)
+
 
 for tau_x in tau_minimization_weight:
 
-    ocp = prepare_ocp(tau_x)
+    ocp = prepare_ocp(tau_x, objective_values)
     ocp.add_plot_penalty(CostType.ALL)
 
     # # --- Solve the program --- # #
@@ -612,7 +622,7 @@ for tau_x in tau_minimization_weight:
 
     )
 
-    directory = "/home/alpha/Desktop/July/PT_Wrist"
+    directory = "/home/alpha/Desktop/July/PT_Wrist_Elbow"
 
     # Create the directory if it doesn't exist
     os.makedirs(directory, exist_ok=True)
