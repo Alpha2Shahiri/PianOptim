@@ -171,7 +171,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=1000,
+                    weight=10000,
                 )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -185,7 +185,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=1000,
+                    weight=100000,
                 )
 
 
@@ -588,7 +588,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/Distal_1.pckl",
+            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/Distal_2.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
