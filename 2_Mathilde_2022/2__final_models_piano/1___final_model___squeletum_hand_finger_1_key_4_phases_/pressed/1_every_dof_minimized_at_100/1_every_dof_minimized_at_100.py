@@ -174,7 +174,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=10000,
+                    weight=1000,
                 )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -561,10 +561,13 @@ for i in range(1, 10):
     tau_minimization_weight.append(i * 100)
 
 # Multiples of 1000
-for i in range(1, 20):
+for i in range(1, 10):
     tau_minimization_weight.append(i * 1000)
+# Multiples of 1000
+for i in range(1, 10):
+    tau_minimization_weight.append(i * 10000)
 
-for  tau_x in tau_minimization_weight:
+for tau_x in tau_minimization_weight:
 
     ocp = prepare_ocp(tau_x)
     ocp.add_plot_penalty(CostType.ALL)
