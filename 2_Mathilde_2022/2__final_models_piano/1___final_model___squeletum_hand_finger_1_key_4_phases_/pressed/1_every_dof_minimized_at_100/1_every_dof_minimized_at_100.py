@@ -557,10 +557,10 @@ def prepare_ocp(
 
 
 tau_minimization_weight = []
-for i in range(1, 10, 3):
-    tau_minimization_weight.append(i * 100)
-# Multiples of 1000
-for i in range(1, 10, 3):
+# for i in range(1, 10, 3):
+#     tau_minimization_weight.append(i * 100)
+# # Multiples of 1000
+for i in range(4, 10, 3):
     tau_minimization_weight.append(i * 1000)
 # Multiples of 1000
 for i in range(1, 10, 2):

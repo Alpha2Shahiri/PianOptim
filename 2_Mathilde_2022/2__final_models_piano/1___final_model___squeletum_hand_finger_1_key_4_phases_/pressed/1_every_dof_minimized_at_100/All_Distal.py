@@ -93,6 +93,7 @@ def Minimize_Power(controller: PenaltyController, segment_idx:int, method:int):
 
 def prepare_ocp(
     tau_x,
+    objectives_x,
     biorbd_model_path: str = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/bioMod/Squeletum_hand_finger_3D_2_keys_octave_LA.bioMod",
     ode_solver: OdeSolver = OdeSolver.COLLOCATION(polynomial_degree=4),
     # assume_phase_dynamics: bool = True,
@@ -174,7 +175,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight=1000,
+                    weight=objectives_x,
                 )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -188,7 +189,7 @@ def prepare_ocp(
                     quadratic=True,
                     phase=i,
                     method=1,
-                    weight= tau_x,
+                    weight=tau_x,
                 )
 
 
@@ -557,88 +558,102 @@ def prepare_ocp(
 
 
 tau_minimization_weight = []
-for i in range(1, 10):
-    tau_minimization_weight.append(i * 100)
-
-# Multiples of 1000
-for i in range(1, 10):
+objectives_weight_coefficient = []
+x = []
+# Multiples of 100
+# for i in range(1, 10, 3):
+#     tau_minimization_weight.append(i * 100)
+# # Multiples of 1000
+for i in range(4 , 10, 3):
     tau_minimization_weight.append(i * 1000)
 # Multiples of 1000
-for i in range(1, 10):
+for i in range(1, 10, 2):
     tau_minimization_weight.append(i * 10000)
-percentages = [0.1, 0.5, 1.0]
 
-# Calculate objective values for each tau_minimization_weight
-objective_values = []
-
-for weight in tau_minimization_weight:
-    for percentage in percentages:
-        objective_values.append(weight * percentage)
-
+# Intermediate points for numbers between 100 and 1000
+for i in tau_minimization_weight:
+    for j in [0.1, 0.5, 1]:
+        objectives_weight_coefficient.append(j * i)
 
 for tau_x in tau_minimization_weight:
 
-    ocp = prepare_ocp(tau_x, objective_values)
-    ocp.add_plot_penalty(CostType.ALL)
+    for objectives_x in objectives_weight_coefficient:
+        x.append([tau_x, objectives_x])
 
-    # # --- Solve the program --- # #
+first_list = tau_minimization_weight  # values for the first list
+second_list = objectives_weight_coefficient  # values for the second list
 
-    solv = Solver.IPOPT(show_online_optim=False)
-    solv.set_maximum_iterations(100000000)
-    solv.set_linear_solver("ma57")
-    tic = time.time()
-    sol = ocp.solve(solv)
+connected_list = []
 
-    # # --- Download datas on a .pckl file --- #
-    q_sym = MX.sym('q_sym', 10, 1)
-    qdot_sym = MX.sym('qdot_sym', 10, 1)
-    tau_sym = MX.sym('tau_sym', 10, 1)
-    Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [
-        ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+# Iterate through the first list
+for tau_x in first_list:
+    # Take three values from the second list for each first value
+    connected_values = second_list[:3]
+    del second_list[:3]  # Remove the taken values from the second list
 
-    rows = 7
-    cols = 3
-    F = [[0] * cols for _ in range(rows)]
+    for objectives_x in connected_values:
 
-    for i in range(0, 7):
-        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
-                                sol.controls[2]['tau'][:, i])
+        ocp = prepare_ocp(tau_x, objectives_x)
+        ocp.add_plot_penalty(CostType.ALL)
 
-    F_array = np.array(F)
+        # # --- Solve the program --- # #
 
-    data = dict(
-        states=sol.states,
-        states_no_intermediate=sol.states_no_intermediate,
-        controls=sol.controls,
-        parameters=sol.parameters,
-        iterations=sol.iterations,
-        cost=np.array(sol.cost)[0][0],
-        detailed_cost=sol.detailed_cost,
-        real_time_to_optimize=sol.real_time_to_optimize,
-        param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
-        phase_time=sol.phase_time,
-        Time=sol.time,
-        Force_Values=F_array,
+        solv = Solver.IPOPT(show_online_optim=False)
+        solv.set_maximum_iterations(100000000)
+        solv.set_linear_solver("ma57")
+        tic = time.time()
+        sol = ocp.solve(solv)
 
-    )
+        # # --- Download datas on a .pckl file --- #
+        q_sym = MX.sym('q_sym', 10, 1)
+        qdot_sym = MX.sym('qdot_sym', 10, 1)
+        tau_sym = MX.sym('tau_sym', 10, 1)
+        Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [
+            ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
 
-    directory = "/home/alpha/Desktop/July/PT_Wrist_Elbow"
+        rows = 7
+        cols = 3
+        F = [[0] * cols for _ in range(rows)]
 
-    # Create the directory if it doesn't exist
-    os.makedirs(directory, exist_ok=True)
+        for i in range(0, 7):
+            F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
+                                    sol.controls[2]['tau'][:, i])
 
-    name = str(tau_x) + ".pckl"
+        F_array = np.array(F)
 
-    # Combine the directory path and filename
-    filepath = os.path.join(directory, name)
+        data = dict(
+            states=sol.states,
+            states_no_intermediate=sol.states_no_intermediate,
+            controls=sol.controls,
+            parameters=sol.parameters,
+            iterations=sol.iterations,
+            cost=np.array(sol.cost)[0][0],
+            detailed_cost=sol.detailed_cost,
+            real_time_to_optimize=sol.real_time_to_optimize,
+            param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
+            phase_time=sol.phase_time,
+            Time=sol.time,
+            Force_Values=F_array,
 
-    # Open the file in write mode and save the data
-    with open(filepath, "wb") as file:
-        pickle.dump(data, file)
+        )
 
-    del ocp
-    del solv
-    del sol
+        directory = "/home/alpha/Desktop/July/PT_Wrist_Elbow"
 
-    # Run garbage collection
-    gc.collect()
+        # Create the directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
+
+        name = str(tau_x) + " + " + str(objectives_x) + ".pckl"
+
+        # Combine the directory path and filename
+        filepath = os.path.join(directory, name)
+
+        # Open the file in write mode and save the data
+        with open(filepath, "wb") as file:
+            pickle.dump(data, file)
+
+        del ocp
+        del solv
+        del sol
+
+        # Run garbage collection
+        gc.collect()
