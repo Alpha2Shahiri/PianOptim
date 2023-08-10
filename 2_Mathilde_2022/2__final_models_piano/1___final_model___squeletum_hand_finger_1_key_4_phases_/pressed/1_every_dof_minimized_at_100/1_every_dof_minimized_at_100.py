@@ -152,15 +152,31 @@ def prepare_ocp(
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
+
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0]
+    )
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4]
+    )
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[6, 7]
+    )
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[1]
+    )
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[2]
     )
 
     for i in [0, 3]:
         objective_functions.add(
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5]
         )
-
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
     for j in [8, 9]:
@@ -175,7 +191,6 @@ def prepare_ocp(
                     method=1,
                     weight=100,
                 )
-
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
@@ -576,7 +591,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/pressed/Results/Rotation_PDP_1.pckl",
+            "/home/alpha/Desktop/July/Aug./3rd Meeting/1.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
