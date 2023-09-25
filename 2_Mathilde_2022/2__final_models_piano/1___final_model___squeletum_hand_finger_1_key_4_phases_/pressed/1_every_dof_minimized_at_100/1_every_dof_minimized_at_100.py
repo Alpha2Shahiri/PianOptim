@@ -162,6 +162,7 @@ def prepare_ocp(
     )
 
     objective_functions.add(
+<<<<<<< Updated upstream
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[6, 7]
     )
 
@@ -171,11 +172,18 @@ def prepare_ocp(
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[2]
+=======
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
+>>>>>>> Stashed changes
     )
 
     for i in [0, 3]:
         objective_functions.add(
+<<<<<<< Updated upstream
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5]
+=======
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
+>>>>>>> Stashed changes
         )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -205,21 +213,14 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
 
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-100, segment="humerus_right", axes=[Axis.Z], quadratic=False)
+
+
     # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
         objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 7])
-
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_COM_POSITION, phase=3, weight=-10000, axes=[Axis.Z], quadratic=False
-    )
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[6])
-
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-10000, segment="humerus_right", axes=[Axis.Z], quadratic=False)
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
@@ -383,9 +384,8 @@ def prepare_ocp(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
     constraints.add(
-        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=0, max_bound=30, phase=2
+        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=0, max_bound=10, phase=2
     )
-
 
     constraints.add(
         ConstraintFcn.SUPERIMPOSE_MARKERS,
@@ -512,7 +512,7 @@ def prepare_ocp(
     x_bounds[0][[0, 1, 2], 0] = 0
     x_bounds[3][[0, 1, 2], 2] = 0
 
-    x_bounds[3].max[[5], 1] = 1.2
+    x_bounds[3].max[[6], 1] = 1.8
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -574,7 +574,6 @@ def main():
 
 
     # # --- Download datas on a .pckl file --- #
-
     data = dict(
         states=sol.states,
         states_no_intermediate=sol.states_no_intermediate,
@@ -591,7 +590,11 @@ def main():
     )
 
     with open(
+<<<<<<< Updated upstream
             "/home/alpha/Desktop/July/Aug./3rd Meeting/1.pckl",
+=======
+            "/home/alpha/Desktop/July/Oct/2.pckl",
+>>>>>>> Stashed changes
             "wb") as file:
         pickle.dump(data, file)
 
@@ -602,11 +605,6 @@ def main():
     ocp.print(to_console=False, to_graph=False)
     # sol.graphs(show_bounds=True)
     sol.animate(show_floor=False, show_global_center_of_mass=False, show_segments_center_of_mass=False, show_global_ref_frame=True, show_local_ref_frame=False, show_markers=False, n_frames=250,)
-
-
-
-
-
 
 
 if __name__ == "__main__":
