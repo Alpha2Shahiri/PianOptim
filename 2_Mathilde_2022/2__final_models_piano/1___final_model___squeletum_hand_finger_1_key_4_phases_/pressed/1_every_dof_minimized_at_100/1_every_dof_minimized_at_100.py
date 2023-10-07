@@ -162,7 +162,6 @@ def prepare_ocp(
     )
 
     objective_functions.add(
-<<<<<<< Updated upstream
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[6, 7]
     )
 
@@ -171,19 +170,18 @@ def prepare_ocp(
     )
 
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[2]
-=======
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
->>>>>>> Stashed changes
-    )
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[2])
+
+    objective_functions.add(
+
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7])
 
     for i in [0, 3]:
         objective_functions.add(
-<<<<<<< Updated upstream
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5]
-=======
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
->>>>>>> Stashed changes
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5])
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
         )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -590,11 +588,7 @@ def main():
     )
 
     with open(
-<<<<<<< Updated upstream
             "/home/alpha/Desktop/July/Aug./3rd Meeting/1.pckl",
-=======
-            "/home/alpha/Desktop/July/Oct/2.pckl",
->>>>>>> Stashed changes
             "wb") as file:
         pickle.dump(data, file)
 
