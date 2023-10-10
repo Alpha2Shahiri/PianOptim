@@ -144,16 +144,16 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 5, 6, 7], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 5, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 5, 6, 7], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 5, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7],
     )
 
     for i in [0, 1, 2, 3]:
@@ -161,20 +161,23 @@ def prepare_ocp(
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2]
         )
 
+    for i in [0, 1, 2, 3]:
+        objective_functions.add(
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[8, 9]
+        )
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
-    for j in [8, 9]:
-        for i in [0, 1, 2, 3]:
-            objective_functions.add(
-                    Minimize_Power,
-                    custom_type=ObjectiveFcn.Lagrange,
-                    segment_idx=[j],
-                    node=Node.ALL_SHOOTING,
-                    quadratic=True,
-                    phase=i,
-                    method=1,
-                    weight=100,
-                )
-
+    # for j in [8, 9]:
+    #     for i in [0, 1, 2, 3]:
+    #         objective_functions.add(
+    #                 Minimize_Power,
+    #                 custom_type=ObjectiveFcn.Lagrange,
+    #                 segment_idx=[j],
+    #                 node=Node.ALL_SHOOTING,
+    #                 quadratic=True,
+    #                 phase=i,
+    #                 method=1,
+    #                 weight=100,
+    #             )
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
@@ -191,7 +194,7 @@ def prepare_ocp(
 
     # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 7])
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 4, 7])
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[6])
@@ -296,7 +299,7 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100, index=[8, 9], derivative=True
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100, index=[8, 9], derivative=True
     )
 
     Mul_Node_Obj = MultinodeObjectiveList()
@@ -488,6 +491,10 @@ def prepare_ocp(
     x_bounds[3][[0, 1, 2], 2] = 0
 
     x_bounds[3].max[[5], 1] = 1.2
+
+    x_bounds[3][[8], 2]=0.08
+    x_bounds[3][[9], 2]=0.35
+
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
