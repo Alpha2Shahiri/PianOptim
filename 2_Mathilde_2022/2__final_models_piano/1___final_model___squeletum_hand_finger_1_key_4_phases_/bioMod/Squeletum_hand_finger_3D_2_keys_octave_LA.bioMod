@@ -60,7 +60,14 @@ segment thorax
     ranges
         //-0.1 0.1
         -0.1 0.1
-        -0.1 0.1
+        -0.15 0.15
+    mass	20
+    com	 -0.03 -0.32 0
+    inertia
+        1.4745	0.000000	0.000000
+        0.000000	0.7555	0.000000
+        0.000000	0.000000	1.4314
+
 endsegment
 
 segment thorax_3D
@@ -71,13 +78,7 @@ segment thorax_3D
     ranges
     //  -0.1 0.1
     //  -0.1 0.1
-    mass	20
-    com	 -0.03 -0.32 0
-    inertia
-        1.4745	0.000000	0.000000
-        0.000000	0.7555	0.000000
-        0.000000	0.000000	1.4314
-     meshfile mesh_files/thorax.vtp
+    meshfile mesh_files/thorax.vtp
 endsegment
 
 segment hat_spine

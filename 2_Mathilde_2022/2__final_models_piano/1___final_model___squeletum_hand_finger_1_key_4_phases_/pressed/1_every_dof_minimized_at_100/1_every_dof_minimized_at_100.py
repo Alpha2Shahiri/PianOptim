@@ -144,44 +144,22 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[1, 3, 4, 5, 6, 7], derivative=True,
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 5, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[1, 3, 4, 5, 6, 7], derivative=True,
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 5, 6, 7]
-    )
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[1, 3, 4, 5, 6, 7], derivative=True,
     )
 
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[1, 3, 4, 5, 6, 7], derivative=True,
     )
 
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[6, 7]
-    )
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[1]
-    )
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[2])
-
-    objective_functions.add(
-
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7])
-
-    for i in [0, 3]:
+    for i in [0, 1, 2, 3]:
         objective_functions.add(
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=20, index=[5])
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=50, index=[0, 2], derivative=True,
         )
 
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
@@ -211,9 +189,8 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
 
-
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-100, segment="humerus_right", axes=[Axis.Z], quadratic=False)
+        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-10000, segment="humerus_right", axes=[Axis.Z],quadratic=False)
 
 
     # To block ulna rotation before the key pressing.
@@ -322,7 +299,6 @@ def prepare_ocp(
 
 
     Mul_Node_Obj = MultinodeObjectiveList()
-
     # To minimize the difference between 0 and 1
     Mul_Node_Obj.add(
         minimize_difference,
@@ -382,7 +358,7 @@ def prepare_ocp(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
     constraints.add(
-        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=0, max_bound=10, phase=2
+        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=10, max_bound=20, phase=2
     )
 
     constraints.add(
@@ -510,7 +486,7 @@ def prepare_ocp(
     x_bounds[0][[0, 1, 2], 0] = 0
     x_bounds[3][[0, 1, 2], 2] = 0
 
-    x_bounds[3].max[[6], 1] = 1.8
+    x_bounds[3].max[[5], 1] = 1.8
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -588,7 +564,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/Desktop/July/Aug./3rd Meeting/1eeeee.pckl",
+            "/home/alpha/Desktop/July/Oct/10 OCt. Pressed vs. Struck/Test1.pckl",
             "wb") as file:
         pickle.dump(data, file)
 

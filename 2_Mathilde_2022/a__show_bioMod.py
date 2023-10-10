@@ -1,6 +1,6 @@
 import bioviz
 
-model_path = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/old_models/3___final___model_finger_hand_1_key/Pressed/FINAL_Pressed_Finger_hand_1_keys/FINAL_Pressed_Finger_hand_1_keys_7_phases.bioMod"
+model_path = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/bioMod/Squeletum_hand_finger_3D_2_keys_octave_LA.bioMod"
 
 b = bioviz.Viz(
     model_path,
