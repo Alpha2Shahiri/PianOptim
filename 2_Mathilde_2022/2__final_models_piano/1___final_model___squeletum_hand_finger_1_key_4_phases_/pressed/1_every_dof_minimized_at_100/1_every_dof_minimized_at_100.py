@@ -2,7 +2,7 @@
  !! Les axes du modèle ne sont pas les mêmes que ceux généralement utilisés en biomécanique : x axe de flexion, y supination/pronation, z vertical
  ici on a : Y -» X , Z-» Y et X -» Z
  """
-from casadi import MX, acos, dot, pi
+from casadi import MX, acos, dot, pi, Function
 import time
 import numpy as np
 import biorbd_casadi as biorbd
@@ -144,21 +144,21 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 5, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 5, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
     )
 
     for i in [0, 1, 2, 3]:
         objective_functions.add(
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2]
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
         )
 
     for i in [0, 1, 2, 3]:
@@ -554,8 +554,23 @@ def main():
     tic = time.time()
     sol = ocp.solve(solv)
 
-
     # # --- Download datas on a .pckl file --- #
+    q_sym = MX.sym('q_sym', 10, 1)
+    qdot_sym = MX.sym('qdot_sym', 10, 1)
+    tau_sym = MX.sym('tau_sym', 10, 1)
+    Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [
+        ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+
+    rows = 7
+    cols = 3
+    F = [[0] * cols for _ in range(rows)]
+
+    for i in range(0, 7):
+        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
+                                sol.controls[2]['tau'][:, i])
+
+    F_array = np.array(F)
+
     data = dict(
         states=sol.states,
         states_no_intermediate=sol.states_no_intermediate,
@@ -568,11 +583,12 @@ def main():
         param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
         phase_time=sol.phase_time,
         Time=sol.time,
+        Force_Values=F_array,
 
     )
 
     with open(
-            "/home/alpha/Desktop/July/Oct/10 OCt. Pressed vs. Struck/Test1.pckl",
+            "/home/alpha/Desktop/July/Oct/10 OCt. Pressed vs. Struck/Tau-Pressed_test.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
