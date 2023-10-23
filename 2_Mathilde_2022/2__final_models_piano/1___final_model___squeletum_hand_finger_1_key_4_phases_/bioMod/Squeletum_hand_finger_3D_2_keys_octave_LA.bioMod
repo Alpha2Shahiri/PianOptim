@@ -4,6 +4,7 @@ version 4
 gravity 0 0 -9.81
 
 segment ground
+
 endsegment
 
 segment pelvis
@@ -15,25 +16,26 @@ segment pelvis
 		0	1	0	0
 		0	0	0	1
 	// translations	xyz
-	rotations	z
+	 rotations	z
         rangesQ //-10   10
                 //-5    5
                 //-0.5  1.5
                 //-pi/2 pi/2
                 //-pi/8 pi/8
-                -pi/8 pi/8
+               -pi/8 pi/8
         rangesQdot //-5      5
  	               //-5      5
                    // -5      5
                    //-5.2360 5.2360
                    //-5.2360 5.2360
-                    -5.2360 5.2360
+                  -5.2360 5.2360
 	mass	7.8384
 	inertia
 		0.058836	0	0
 		0	0.064617	0
 		0	0	0.064617
 	com	-0.093546	-0.028679	0
+
 endsegment
 
 segment pelvis_r
@@ -59,8 +61,8 @@ segment thorax
     RT 0 0 0 xyz 0 0.13 0
     ranges
         //-0.1 0.1
-        -0.1 0.1
-        -0.1 0.1
+       -0.1 0.1
+       -0.1 0.1
     mass	20
     com	 -0.03 -0.32 0
     inertia
@@ -102,7 +104,6 @@ segment clavicle_effector_right
         0               0               0                1
 endsegment
 
-
 segment clavicle_right
     parent clavicle_effector_right
     RTinmatrix 1
@@ -115,7 +116,6 @@ segment clavicle_right
     com -0.0127205 0.00849541 0.0659846
     meshfile mesh_files/clavicle.vtp
 endsegment
-
 
 segment scapula_effector_right
       parent clavicle_right
@@ -141,8 +141,8 @@ segment humerus_right
 	rotations xyz                               // degres de liberte
 
 	ranges                                      // limites d angles de rotation des ddl
-	    -pi/2 0.1
-        -pi/2 pi/2
+	   -pi/2 0.1
+       -pi/2 pi/2
         -pi/4 pi
 
     mass 2.0325                                 // masse en kg du segment
@@ -153,7 +153,6 @@ segment humerus_right
         0 0 0.013409
     meshfile mesh_files/humerus.vtp             // fichier .vpt pour obtenir un maillage visuel
 endsegment
-
 
 segment ulna_effector_right
     parent humerus_right
@@ -1607,6 +1606,10 @@ contact    contact_finger
 
 // touche 1 //
 segment square
+	//meshfile piano_assesmbly_asm.stl
+  //  meshrt 0 0 0 xyz 0 0 0
+   // meshcscale 0.00001 0.00001 0.00001
+
     // piano moved from 5 cm
     mesh 0.5056114196777344+0.06 -0.17254042053222657 0.07808863830566405-0.01
     mesh 0.5056114196777344+0.06 -0.17254042053222657 0.07808863830566405-0.01-0.01
@@ -1614,6 +1617,7 @@ segment square
     mesh 0.5056114196777344+0.06 -0.14954042053222655 0.07808863830566405-0.01-0.01
     mesh 0.5056114196777344+0.06 -0.14954042053222655 0.07808863830566405-0.01-0.01
     mesh 0.5056114196777344+0.06 -0.14954042053222655 0.07808863830566405-0.01
+
 endsegment
 
 // Touche 2 //
@@ -1675,3 +1679,5 @@ segment distance_thorax_side_LA
     mesh 0.5056114196777344  -0.16104042053222656 0.07808863830566405
 endsegment
 */
+
+

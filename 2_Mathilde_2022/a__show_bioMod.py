@@ -10,5 +10,6 @@ b = bioviz.Viz(
     show_segments_center_of_mass=False,
     show_global_ref_frame=True,
     show_local_ref_frame=False,
+    show_gravity_vector=True
 )
 b.exec()

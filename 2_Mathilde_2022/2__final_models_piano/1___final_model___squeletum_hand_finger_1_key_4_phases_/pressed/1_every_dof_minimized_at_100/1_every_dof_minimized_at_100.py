@@ -144,27 +144,28 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7],
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
 
     for i in [0, 1, 2, 3]:
         objective_functions.add(
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[5]
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2, 5]
         )
+    #
+    # for i in [0, 1, 2, 3]:
+    #     objective_functions.add(
+    #         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=1000, index=[8, 9]
+    #     )
 
-    for i in [0, 1, 2, 3]:
-        objective_functions.add(
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=100, index=[8, 9]
-        )
     # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
     # for j in [8, 9]:
     #     for i in [0, 1, 2, 3]:
@@ -195,6 +196,9 @@ def prepare_ocp(
     # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
         objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 4, 7])
+
+    for i in [1, 2]:
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[2])
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[6])
@@ -296,11 +300,12 @@ def prepare_ocp(
 
     # To avoid the apparition of "noise" caused by the objective function just before.
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[8, 9], derivative=True
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
     )
+
 
     Mul_Node_Obj = MultinodeObjectiveList()
     # To minimize the difference between 0 and 1
@@ -486,15 +491,17 @@ def prepare_ocp(
     x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
     x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
 
+    #
+    # x_bounds[0][[0, 1, 2], 0] = 0
+    # x_bounds[3][[0, 1, 2], 2] = 0
 
-    x_bounds[0][[0, 1, 2], 0] = 0
-    x_bounds[3][[0, 1, 2], 2] = 0
+    x_bounds[0][[0], 0] = -0.1
+    x_bounds[3][[0], 2] = -0.1
+
+    x_bounds[0][[2], 0] = 0.1
+    x_bounds[3][[2], 2] = 0.1
 
     x_bounds[3].max[[5], 1] = 1.2
-
-    x_bounds[3][[8], 2]=0.08
-    x_bounds[3][[9], 2]=0.35
-
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -588,7 +595,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/Desktop/July/Oct/10 OCt. Pressed vs. Struck/Tau-Pressed_test.pckl",
+            "/home/alpha/Desktop/NEW oCT. 16/V1_All_NEW23.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
