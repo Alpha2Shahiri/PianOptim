@@ -144,21 +144,21 @@ def prepare_ocp(
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 3, 4, 5, 6]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 3, 4, 5, 6]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 3, 4, 5, 6]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 3, 4, 5, 6]
     )
 
     for i in [0, 1, 2, 3]:
         objective_functions.add(
-            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2, 5]
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[2]
         )
     #
     # for i in [0, 1, 2, 3]:
@@ -181,27 +181,27 @@ def prepare_ocp(
     #             )
 
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=1, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=1, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=2, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=2, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=0.0001, index=[0, 1, 2, 3, 4]
     )
 
     # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[3, 4, 7])
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=10000, index=[0, 1, 4])
 
-    for i in [1, 2]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[2])
+    # for i in [1, 2]:
+    #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[2])
 
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[6])
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=10000, index=[3])
 
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=3, weight=-10000, segment="humerus_right", axes=[Axis.Z], quadratic=False)
@@ -300,12 +300,11 @@ def prepare_ocp(
 
     # To avoid the apparition of "noise" caused by the objective function just before.
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[5, 6], derivative=True
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[5, 6], derivative=True
     )
-
 
     Mul_Node_Obj = MultinodeObjectiveList()
     # To minimize the difference between 0 and 1
@@ -367,7 +366,7 @@ def prepare_ocp(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
     constraints.add(
-        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=15, max_bound=30, phase=2
+        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL_SHOOTING, contact_index=2, min_bound=20, max_bound=30, phase=2
     )
 
     constraints.add(
@@ -495,13 +494,13 @@ def prepare_ocp(
     # x_bounds[0][[0, 1, 2], 0] = 0
     # x_bounds[3][[0, 1, 2], 2] = 0
 
-    x_bounds[0][[0], 0] = -0.1
-    x_bounds[3][[0], 2] = -0.1
+    # x_bounds[0][[0], 0] = -0.1
+    # x_bounds[3][[0], 2] = -0.1
+    #
+    # x_bounds[0][[2], 0] = 0.1
+    # x_bounds[3][[2], 2] = 0.1
 
-    x_bounds[0][[2], 0] = 0.1
-    x_bounds[3][[2], 2] = 0.1
-
-    x_bounds[3].max[[5], 1] = 1.2
+    x_bounds[3].max[[2], 1] = 1.2
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -510,11 +509,11 @@ def prepare_ocp(
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
 
     for i in range(4):
-        x_init[i][4, 0] = 0.08
-        x_init[i][5, 0] = 0.67
-        x_init[i][6, 0] = 1.11
-        x_init[i][7, 0] = 1.48
-        x_init[i][9, 0] = 0.17
+        x_init[i][1, 0] = 0.08
+        x_init[i][2, 0] = 0.67
+        x_init[i][3, 0] = 1.11
+        x_init[i][4, 0] = 1.48
+        x_init[i][6, 0] = 0.17
 
     # Define control path constraint
     u_bounds = BoundsList()
@@ -562,9 +561,9 @@ def main():
     sol = ocp.solve(solv)
 
     # # --- Download datas on a .pckl file --- #
-    q_sym = MX.sym('q_sym', 10, 1)
-    qdot_sym = MX.sym('qdot_sym', 10, 1)
-    tau_sym = MX.sym('tau_sym', 10, 1)
+    q_sym = MX.sym('q_sym', 7, 1)
+    qdot_sym = MX.sym('qdot_sym', 7, 1)
+    tau_sym = MX.sym('tau_sym', 7, 1)
     Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [
         ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
 
@@ -595,7 +594,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/Desktop/NEW oCT. 16/V1_All_NEW23.pckl",
+            "/home/alpha/Desktop/NEW oCT. 16/V1_Shoulder_NEW_23_20.pckl",
             "wb") as file:
         pickle.dump(data, file)
 
