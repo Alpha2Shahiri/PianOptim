@@ -2,7 +2,7 @@
  !! Les axes du modèle ne sont pas les mêmes que ceux généralement utilisés en biomécanique : x axe de flexion, y supination/pronation, z vertical
  ici on a : Y -» X , Z-» Y et X -» Z
  """
-from casadi import MX, acos, dot, pi
+from casadi import MX, acos, dot, pi, Function
 import time
 import numpy as np
 import biorbd_casadi as biorbd
@@ -27,6 +27,7 @@ from bioptim import (
     OdeSolver,
     Solver,
     MultinodeObjectiveList,
+    Axis,
 )
 
 def minimize_difference(controllers: list[PenaltyController, PenaltyController]):
@@ -77,7 +78,13 @@ def custom_func_track_principal_finger_pi_in_two_global_axis(controller: Penalty
     return output_casadi
 
     # principal_finger_axis = all_pn.nlp.model.globalJCS(q, rotation_matrix_index).to_mx()  # x finger = y global
+def Minimize_Power(controller: PenaltyController, segment_idx:int, method:int):
 
+    segments_qdot = controller.states["qdot"].cx[segment_idx]
+    segments_tau = controller.controls["tau"].cx[segment_idx]
+    Power= segments_tau * segments_qdot
+
+    return Power
 def prepare_ocp(
     biorbd_model_path: str = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/bioMod/Squeletum_hand_finger_3D_2_keys_octave_LA.bioMod",
     ode_solver: OdeSolver = OdeSolver.COLLOCATION(polynomial_degree=4),
@@ -131,14 +138,42 @@ def prepare_ocp(
     # Objectives
     # Minimize Torques generated into articulations
     objective_functions = ObjectiveList()
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[0, 1, 2, 3, 4, 6, 7, 8, 9])
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[0, 1, 2, 3, 4, 6, 7, 8, 9])
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[0, 1, 2, 3, 4, 6, 7, 8, 9])
-    objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[0, 1, 2, 3, 4, 6, 7, 8, 9])
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=0, weight=100, index=[3, 4, 6, 7, 8, 9]
+    )
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 6, 7, 8, 9]
+    )
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
+    )
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
+    )
 
     for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=50, index=[5])
+        objective_functions.add(
+            ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2, 5]
+        )
+    #
+    # for i in [0, 1, 2, 3]:
+    #     objective_functions.add(
+    #         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=1000, index=[8, 9]
+    #     )
 
+    # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
+    # for j in [8, 9]:
+    #     for i in [0, 1, 2, 3]:
+    #         objective_functions.add(
+    #                 Minimize_Power,
+    #                 custom_type=ObjectiveFcn.Lagrange,
+    #                 segment_idx=[j],
+    #                 node=Node.ALL_SHOOTING,
+    #                 quadratic=True,
+    #                 phase=i,
+    #                 method=1,
+    #                 weight=100,
+    #             )
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="q", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
@@ -151,6 +186,21 @@ def prepare_ocp(
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
+
+    # # To block ulna rotation before the key pressing.
+    for i in [0, 1, 2, 3]:
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=1000, index=[3, 7])
+    #
+    # for i in [1, 2]:
+    #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[2])
+    #
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[6])
+
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=-10000, segment="humerus_right", axes=[Axis.Z],
+        quadratic=False)
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
@@ -246,10 +296,10 @@ def prepare_ocp(
 
     # To avoid the apparition of "noise" caused by the objective function just before.
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=100, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[8, 9], derivative=True
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=100, index=[8, 9], derivative=True
+        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
     )
 
     multinode_objectives = MultinodeObjectiveList()
@@ -320,7 +370,7 @@ def prepare_ocp(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
     constraints.add(
-        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=2, min_bound=0, max_bound=30, phase=2
+        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=2, min_bound=20, max_bound=30, phase=2
     )
     constraints.add(
         ConstraintFcn.SUPERIMPOSE_MARKERS,
@@ -443,9 +493,14 @@ def prepare_ocp(
     x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
     x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
 
-    x_bounds[0][[0, 1, 2], 0] = 0
-    x_bounds[3][[0, 1, 2], 2] = 0
+    #
+    x_bounds[0][[0], 0] = -0.1
+    x_bounds[3][[0], 2] = -0.1
 
+    x_bounds[0][[2], 0] = 0.1
+    x_bounds[3][[2], 2] = 0.1
+
+    x_bounds[0].max[[5], 1] = 1.2
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -506,8 +561,23 @@ def main():
     sol = ocp.solve(solv)
     #
     # # # # --- Take important states for Finger_Marker_5 and Finger_marker --- # #
+    q_sym = MX.sym('q_sym', 10, 1)
+    qdot_sym = MX.sym('qdot_sym', 10, 1)
+    tau_sym = MX.sym('tau_sym', 10, 1)
 
-    # # # --- Download datas on a .pckl file --- #
+    Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+
+    rows = 9
+    cols = 3
+    F = [[0] * cols for _ in range(rows)]
+
+    for i in range(0, 9):
+
+        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
+        sol.controls[2]['tau'][:, i])
+
+    F_array = np.array(F)
+    # # --- Download datas on a .pckl file --- #
 
     data = dict(
         states=sol.states,
@@ -521,11 +591,11 @@ def main():
         param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
         phase_time=sol.phase_time,
         Time=sol.time,
-
+        Force_Values=F_array,
     )
 
     with open(
-            "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/strucked/Results/alldofs_struckTouch_1.pckl", "wb") as file:
+            "/home/alpha/Desktop/NEW oCT. 16/Felipe and Optimal Control Group - Pressed Touch 23 October./Results For Struck Touch_20/V1_All_Strcuck23_20.pckl", "wb") as file:
         pickle.dump(data, file)
 
     # # --- Print results --- # #
@@ -535,7 +605,7 @@ def main():
     ocp.print(to_console=False, to_graph=False)
     # sol.graphs(show_bounds=True)
     sol.print_cost()
-    sol.animate(show_floor=False, show_global_center_of_mass=False, show_segments_center_of_mass=False, show_global_ref_frame=False, show_local_ref_frame=False, show_markers=False, n_frames=500)
+    sol.animate(show_floor=False, show_global_center_of_mass=False, show_segments_center_of_mass=False, show_global_ref_frame=True, show_local_ref_frame=False, show_markers=False, n_frames=250,)
 
 
 if __name__ == "__main__":
