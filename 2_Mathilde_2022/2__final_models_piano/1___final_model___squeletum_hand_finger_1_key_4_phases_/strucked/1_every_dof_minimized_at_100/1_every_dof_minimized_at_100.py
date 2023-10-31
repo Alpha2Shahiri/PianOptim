@@ -150,7 +150,7 @@ def prepare_ocp(
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
-
+    #
     for i in [0, 1, 2, 3]:
         objective_functions.add(
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2, 5]
@@ -191,16 +191,15 @@ def prepare_ocp(
     for i in [0, 1, 2, 3]:
         objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=1000, index=[3, 7])
     #
+    for i in [1, 2]:
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[0, 2])
+
     # for i in [1, 2]:
-    #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[2])
-    #
+    #     objective_functions.add(
+    #         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=10000, index=[5])
 
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=1000, index=[6])
-
-    objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=-10000, segment="humerus_right", axes=[Axis.Z],
-        quadratic=False)
+    # objective_functions.add(
+    #     ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=-10000, segment="pelvis", axes=[Axis.Z], quadratic=True)
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
@@ -500,7 +499,12 @@ def prepare_ocp(
     x_bounds[0][[2], 0] = 0.1
     x_bounds[3][[2], 2] = 0.1
 
-    x_bounds[0].max[[5], 1] = 1.2
+    # x_bounds[0][[0, 1, 2], 0] = 0
+    # x_bounds[3][[0, 1, 2], 2] = 0
+
+    x_bounds[0].min[[0], 0] = -0.1
+    x_bounds[0].max[[0], 0] = 0
+
     # Initial guess
     x_init = InitialGuessList()
     x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
@@ -595,7 +599,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/Desktop/NEW oCT. 16/Felipe and Optimal Control Group - Pressed Touch 23 October./Results For Struck Touch_20/V1_All_Strcuck23_20.pckl", "wb") as file:
+            "/home/alpha/Desktop/NEW oCT. 16/Felipe and Optimal Control Group - Pressed Touch 23 October./Results For Struck Touch_20/V1_All_Strcuck30_20.pckl", "wb") as file:
         pickle.dump(data, file)
 
     # # --- Print results --- # #
