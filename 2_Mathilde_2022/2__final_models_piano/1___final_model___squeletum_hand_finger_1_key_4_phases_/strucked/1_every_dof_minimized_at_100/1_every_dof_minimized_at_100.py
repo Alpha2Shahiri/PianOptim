@@ -78,33 +78,18 @@ def custom_func_track_principal_finger_pi_in_two_global_axis(controller: Penalty
     return output_casadi
 
     # principal_finger_axis = all_pn.nlp.model.globalJCS(q, rotation_matrix_index).to_mx()  # x finger = y global
-def Minimize_Power(controller: PenaltyController, segment_idx:int, method:int):
-
-    segments_qdot = controller.states["qdot"].cx[segment_idx]
-    segments_tau = controller.controls["tau"].cx[segment_idx]
-    Power= segments_tau * segments_qdot
-
-    return Power
+# def Minimize_Power(controller: PenaltyController, segment_idx:int, method:int):
+#
+#     segments_qdot = controller.states["qdot"].cx[segment_idx]
+#     segments_tau = controller.controls["tau"].cx[segment_idx]
+#     Power= segments_tau * segments_qdot
+#
+#     return Power
 def prepare_ocp(
     biorbd_model_path: str = "/home/alpha/pianoptim/PianOptim/2_Mathilde_2022/2__final_models_piano/1___final_model___squeletum_hand_finger_1_key_4_phases_/bioMod/Squeletum_hand_finger_3D_2_keys_octave_LA.bioMod",
     ode_solver: OdeSolver = OdeSolver.COLLOCATION(polynomial_degree=4),
     # assume_phase_dynamics: bool = True,
 ) -> OptimalControlProgram:
-
-    """
-    Prepare the ocp
-
-    Parameters
-    ----------
-    biorbd_model_path: str
-        The path to the bioMod
-    ode_solver: OdeSolver
-        The ode solve to use
-
-    Returns
-    -------
-    The OptimalControlProgram ready to be solved
-    """
 
     biorbd_model = (
         BiorbdModel(biorbd_model_path),
@@ -171,25 +156,7 @@ def prepare_ocp(
         objective_functions.add(
             ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=60, index=[0, 1, 2, 5]
         )
-    #
-    # for i in [0, 1, 2, 3]:
-    #     objective_functions.add(
-    #         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=i, weight=1000, index=[8, 9]
-    #     )
 
-    # Special articulations called individually in order to see, in the results, the individual objectives cost of each.
-    # for j in [8, 9]:
-    #     for i in [0, 1, 2, 3]:
-    #         objective_functions.add(
-    #                 Minimize_Power,
-    #                 custom_type=ObjectiveFcn.Lagrange,
-    #                 segment_idx=[j],
-    #                 node=Node.ALL_SHOOTING,
-    #                 quadratic=True,
-    #                 phase=i,
-    #                 method=1,
-    #                 weight=100,
-    #             )
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="q", phase=0, weight=0.0001, index=[0, 1, 2, 3, 4, 5, 6, 7]
     )
@@ -206,19 +173,10 @@ def prepare_ocp(
     # # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
         objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=100000, index=[3, 7])
-    #
-    # for i in [1, 2]:
-    #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[0, 2])
 
     for i in [1, 2]:
         objective_functions.add(
             ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=i, weight=10000, segment="humerus_right", axes=[Axis.Z], quadratic=True)
-
-    # objective_functions.add(
-    #     ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=10000, segment="pelvis", axes=[Axis.Z], quadratic=True)
-    #
-    # objective_functions.add(
-    #     ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=10000, segment="humerus_right", axes=[Axis.Z], quadratic=True)
 
     objective_functions.add(
         ObjectiveFcn.Mayer.TRACK_MARKERS_VELOCITY,
@@ -321,7 +279,7 @@ def prepare_ocp(
     )
 
     objective_functions.add(
-        ObjectiveFcn.Lagrange.TRACK_CONTACT_FORCES,
+        ObjectiveFcn.Mayer.TRACK_CONTACT_FORCES,
         target=Froce,
         node=Node.ALL_SHOOTING,
         contact_index=2,
@@ -395,9 +353,6 @@ def prepare_ocp(
     constraints.add(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
-    # constraints.add(
-    #     ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=2, min_bound=20, max_bound=30, phase=2
-    # )
 
     constraints.add(
         ConstraintFcn.SUPERIMPOSE_MARKERS,
@@ -507,29 +462,25 @@ def prepare_ocp(
     phase_transition = PhaseTransitionList()
     phase_transition.add(PhaseTransitionFcn.IMPACT, phase_pre_idx=1)
 
-    # EXPLANATION
-    # ex: x_bounds[0][3, 0] = vel_pushing
-    # [ phase 0 ]
-    # [indice du ddl (0 et 1 position y z, 2 et 3 vitesse y z),
-    # time (0 =» 1st point, 1 =» all middle points, 2 =» last point)]
-
     # Path constraint
     x_bounds = BoundsList()
-    x_bounds[0]["q"] = biorbd_model[0].bounds_from_ranges("q")
-    # x_bounds["q"][[0], 0] = -0.1
-    # x_bounds["q"][[2], 0] = 0.1
-    x_bounds[0]["qdot"] = biorbd_model[0].bounds_from_ranges("qdot")
+    x_bounds.add("q", bounds=biorbd_model[0].bounds_from_ranges("q"), phase=0)
+    x_bounds.add("qdot", bounds=biorbd_model[0].bounds_from_ranges("qdot"), phase=0)
 
-    # x_bounds[1]["q"] = biorbd_model[1].bounds_from_ranges("q")
-    # x_bounds[1]["qdot"] = biorbd_model[1].bounds_from_ranges("qdot")
-    #
-    # x_bounds[2]["q"] = biorbd_model[2].bounds_from_ranges("q")
-    # x_bounds[2]["qdot"] = biorbd_model[2].bounds_from_ranges("qdot")
-    #
-    # x_bounds[3]["q"] = biorbd_model[3].bounds_from_ranges("q")
-    # # x_bounds["q"][[0], 0] = -0.1
-    # # x_bounds["q"][[2], 0] = 0.1
-    # x_bounds[3]["qdot"] = biorbd_model[3].bounds_from_ranges("qdot")
+    x_bounds.add("q", bounds=biorbd_model[1].bounds_from_ranges("q"), phase=1)
+    x_bounds.add("qdot", bounds=biorbd_model[1].bounds_from_ranges("qdot"), phase=1)
+
+    x_bounds.add("q", bounds=biorbd_model[2].bounds_from_ranges("q"), phase=2)
+    x_bounds.add("qdot", bounds=biorbd_model[2].bounds_from_ranges("qdot"), phase=2)
+
+    x_bounds.add("q", bounds=biorbd_model[3].bounds_from_ranges("q"), phase=3)
+    x_bounds.add("qdot", bounds=biorbd_model[3].bounds_from_ranges("qdot"), phase=3)
+
+    x_bounds[0]["q"][[0], 0] = -0.1
+    x_bounds[0]["q"][[2], 0] = 0.1
+
+    x_bounds[3]["q"][[0], 2] = -0.1
+    x_bounds[3]["q"][[2], 2] = 0.1
 
 
     # Initial guess
@@ -547,13 +498,12 @@ def prepare_ocp(
     x_init.add("q", [0] * biorbd_model[0].nb_q, phase=3)
     x_init.add("qdot", [0] * biorbd_model[0].nb_q, phase=3)
 
-
     for i in range(4):
-        x_init[i][4, 0] = 0.08
-        x_init[i][5, 0] = 0.67
-        x_init[i][6, 0] = 1.11
-        x_init[i][7, 0] = 1.48
-        x_init[i][9, 0] = 0.17
+        x_init[i]["q"][4, 0] = 0.08
+        x_init[i]["q"][5, 0] = 0.67
+        x_init[i]["q"][6, 0] = 1.11
+        x_init[i]["q"][7, 0] = 1.48
+        x_init[i]["q"][9, 0] = 0.17
 
     # Define control path constraint
     u_bounds = BoundsList()
@@ -565,22 +515,20 @@ def prepare_ocp(
 
 
     u_init = InitialGuessList()
-
     u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
-    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
-    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
-    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
-
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=1)
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=2)
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=3)
 
     return OptimalControlProgram(
         biorbd_model,
         dynamics,
         n_shooting,
         phase_time1,
-        x_init,
-        u_init,
-        x_bounds,
-        u_bounds,
+        x_init=x_init,
+        u_init=u_init,
+        x_bounds=x_bounds,
+        u_bounds=u_bounds,
         objective_functions=objective_functions,
         constraints=constraints,
         phase_transitions=phase_transition,
@@ -605,24 +553,24 @@ def main():
     sol = ocp.solve(solv)
     #
     # # # # --- Take important states for Finger_Marker_5 and Finger_marker --- # #
-    q_sym = MX.sym('q_sym', 10, 1)
-    qdot_sym = MX.sym('qdot_sym', 10, 1)
-    tau_sym = MX.sym('tau_sym', 10, 1)
-
-    Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
-
-    rows = 9
-    cols = 3
-    F = [[0] * cols for _ in range(rows)]
-
-    for i in range(0, 9):
-
-        F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
-        sol.controls[2]['tau'][:, i])
-
-    F_array = np.array(F)
-    # # --- Download datas on a .pckl file --- #
-
+    # q_sym = MX.sym('q_sym', 10, 1)
+    # qdot_sym = MX.sym('qdot_sym', 10, 1)
+    # tau_sym = MX.sym('tau_sym', 10, 1)
+    #
+    # Calculaing_Force = Function("Temp", [q_sym, qdot_sym, tau_sym], [ocp.nlp[2].model.contact_forces_from_constrained_forward_dynamics(q_sym, qdot_sym, tau_sym)])
+    #
+    # rows = 9
+    # cols = 3
+    # F = [[0] * cols for _ in range(rows)]
+    #
+    # for i in range(0, 9):
+    #
+    #     F[i] = Calculaing_Force(sol.states[2]["q"][:, i], sol.states[2]["qdot"][:, i],
+    #     sol.controls[2]['tau'][:, i])
+    #
+    # F_array = np.array(F)
+    # # # --- Download datas on a .pckl file --- #
+    #
     data = dict(
         states=sol.states,
         states_no_intermediate=sol.states_no_intermediate,
@@ -635,7 +583,7 @@ def main():
         param_scaling=[nlp.parameters.scaling for nlp in ocp.nlp],
         phase_time=sol.phase_time,
         Time=sol.time,
-        Force_Values=F_array,
+        # Force_Values=F_array,
     )
 
     with open(
