@@ -189,7 +189,7 @@ def prepare_ocp(
 
     # # To block ulna rotation before the key pressing.
     for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=1000, index=[3, 4, 7])
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=1000, index=[7])
     #
     # for i in [1, 2]:
     #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[0, 2])
