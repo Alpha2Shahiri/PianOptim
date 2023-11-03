@@ -130,6 +130,21 @@ def prepare_ocp(
         ]
     ]
 
+
+    Froce = [
+        [
+            30,
+            26,
+            23,
+            20,
+            18,
+            20,
+            18,
+            15,
+            0,
+        ]
+    ]
+
     pi_sur_2_phase_0 = np.full((1, n_shooting[0] + 1), pi / 2)
     pi_sur_2_phase_1 = np.full((1, n_shooting[1] + 1), pi / 2)
     pi_sur_2_phase_2 = np.full((1, n_shooting[2] + 1), pi / 2)
@@ -307,6 +322,14 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=3, weight=1000, index=[8, 9], derivative=True
     )
 
+    objective_functions.add(
+        ObjectiveFcn.Lagrange.TRACK_CONTACT_FORCES,
+        target=Froce,
+        node=Node.ALL_SHOOTING,
+        contact_index=2,
+        phase=2,
+        weight=10000,
+    )
     multinode_objectives = MultinodeObjectiveList()
 
     # To minimize the difference between 0 and 1
@@ -374,9 +397,10 @@ def prepare_ocp(
     constraints.add(
         ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=1, min_bound=-5, max_bound=5, phase=2
     )
-    constraints.add(
-        ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=2, min_bound=20, max_bound=30, phase=2
-    )
+    # constraints.add(
+    #     ConstraintFcn.TRACK_CONTACT_FORCES, node=Node.ALL, contact_index=2, min_bound=20, max_bound=30, phase=2
+    # )
+
     constraints.add(
         ConstraintFcn.SUPERIMPOSE_MARKERS,
         node=Node.END,
