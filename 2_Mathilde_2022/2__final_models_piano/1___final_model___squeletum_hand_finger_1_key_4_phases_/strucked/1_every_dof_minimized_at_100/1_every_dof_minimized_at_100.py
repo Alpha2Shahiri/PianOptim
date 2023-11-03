@@ -145,8 +145,11 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7]
     )
+    # objective_functions.add(
+    #     ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
+    # )
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
@@ -188,15 +191,15 @@ def prepare_ocp(
     )
 
     # # To block ulna rotation before the key pressing.
-    for i in [0, 1, 2, 3]:
-        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=1000, index=[7])
+    for i in [0, 3]:
+        objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=100000, index=[3, 7])
     #
     # for i in [1, 2]:
     #     objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=-10000, index=[0, 2])
 
-    # for i in [1, 2]:
-    #     objective_functions.add(
-    #         ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=0, weight=10000, index=[5])
+    for i in [1, 2]:
+        objective_functions.add(
+            ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=i, weight=10000, segment="humerus_right", axes=[Axis.Z], quadratic=True)
 
     # objective_functions.add(
     #     ObjectiveFcn.Lagrange.MINIMIZE_SEGMENT_ROTATION, phase=0, weight=10000, segment="pelvis", axes=[Axis.Z], quadratic=True)
@@ -508,8 +511,11 @@ def prepare_ocp(
     # x_bounds[0].min[[0], 0] = -0.1
     # x_bounds[0].max[[0], 0] = 0
 
-    x_bounds[0][[9], 0] = 0.3
-    x_bounds[3][[9], 2] = 0.3
+    # x_bounds[0][[9], :] = 0.3
+    # x_bounds[3][[9], 2] = 0.3
+
+    # x_bounds[0][[8], :] = 0.8
+    # x_bounds[3][[8], 2] = 0.8
 
     # Initial guess
     x_init = InitialGuessList()
