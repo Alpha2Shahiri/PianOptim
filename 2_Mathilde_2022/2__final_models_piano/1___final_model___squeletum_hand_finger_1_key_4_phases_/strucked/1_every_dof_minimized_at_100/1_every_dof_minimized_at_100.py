@@ -206,7 +206,7 @@ def prepare_ocp(
     )
 
     # # To block ulna rotation before the key pressing.
-    for i in [0, 3]:
+    for i in [0, 1, 2, 3]:
         objective_functions.add(ObjectiveFcn.Lagrange.MINIMIZE_STATE, key="qdot", phase=i, weight=100000, index=[3, 7])
     #
     # for i in [1, 2]:
@@ -635,7 +635,7 @@ def main():
     )
 
     with open(
-            "/home/alpha/Desktop/NEW OCT. 16/Felipe and Optimal Control Group - Pressed Touch 23 October./Results For Struck Touch_20/New_Friday_Strcuck_20.pckl", "wb") as file:
+            "/home/alpha/Desktop/NEW OCT. 16/Felipe and Optimal Control Group - Pressed Touch 23 October./Results For Struck Touch_20/NewProfile_Friday_Strcuck_20_removing.pckl", "wb") as file:
         pickle.dump(data, file)
 
     # # --- Print results --- # #
