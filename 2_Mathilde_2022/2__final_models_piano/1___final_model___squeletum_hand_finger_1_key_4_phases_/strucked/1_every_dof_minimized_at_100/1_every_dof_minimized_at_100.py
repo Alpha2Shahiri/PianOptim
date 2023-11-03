@@ -160,11 +160,9 @@ def prepare_ocp(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=1, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
     objective_functions.add(
-        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7]
+        ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
-    # objective_functions.add(
-    #     ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=2, weight=100, index=[3, 4, 6, 7, 8, 9]
-    # )
+
     objective_functions.add(
         ObjectiveFcn.Lagrange.MINIMIZE_CONTROL, key="tau", phase=3, weight=100, index=[3, 4, 6, 7, 8, 9]
     )
@@ -517,36 +515,38 @@ def prepare_ocp(
 
     # Path constraint
     x_bounds = BoundsList()
-    x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
-    x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
-    x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
-    x_bounds.add(bounds=biorbd_model[0].bounds_from_ranges(["q", "qdot"]))
+    x_bounds[0]["q"] = biorbd_model[0].bounds_from_ranges("q")
+    # x_bounds["q"][[0], 0] = -0.1
+    # x_bounds["q"][[2], 0] = 0.1
+    x_bounds[0]["qdot"] = biorbd_model[0].bounds_from_ranges("qdot")
 
+    # x_bounds[1]["q"] = biorbd_model[1].bounds_from_ranges("q")
+    # x_bounds[1]["qdot"] = biorbd_model[1].bounds_from_ranges("qdot")
     #
-    x_bounds[0][[0], 0] = -0.1
-    x_bounds[3][[0], 2] = -0.1
+    # x_bounds[2]["q"] = biorbd_model[2].bounds_from_ranges("q")
+    # x_bounds[2]["qdot"] = biorbd_model[2].bounds_from_ranges("qdot")
+    #
+    # x_bounds[3]["q"] = biorbd_model[3].bounds_from_ranges("q")
+    # # x_bounds["q"][[0], 0] = -0.1
+    # # x_bounds["q"][[2], 0] = 0.1
+    # x_bounds[3]["qdot"] = biorbd_model[3].bounds_from_ranges("qdot")
 
-    x_bounds[0][[2], 0] = 0.1
-    x_bounds[3][[2], 2] = 0.1
-
-    # x_bounds[0][[0, 1, 2], 0] = 0
-    # x_bounds[3][[0, 1, 2], 2] = 0
-
-    # x_bounds[0].min[[0], 0] = -0.1
-    # x_bounds[0].max[[0], 0] = 0
-
-    # x_bounds[0][[9], :] = 0.3
-    # x_bounds[3][[9], 2] = 0.3
-
-    # x_bounds[0][[8], :] = 0.8
-    # x_bounds[3][[8], 2] = 0.8
 
     # Initial guess
     x_init = InitialGuessList()
-    x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
-    x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
-    x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
-    x_init.add([0] * (biorbd_model[0].nb_q + biorbd_model[0].nb_qdot))
+
+    x_init.add("q", [0] * biorbd_model[0].nb_q, phase=0)
+    x_init.add("qdot", [0] * biorbd_model[0].nb_q, phase=0)
+
+    x_init.add("q", [0] * biorbd_model[0].nb_q, phase=1)
+    x_init.add("qdot", [0] * biorbd_model[0].nb_q, phase=1)
+
+    x_init.add("q", [0] * biorbd_model[0].nb_q, phase=2)
+    x_init.add("qdot", [0] * biorbd_model[0].nb_q, phase=2)
+
+    x_init.add("q", [0] * biorbd_model[0].nb_q, phase=3)
+    x_init.add("qdot", [0] * biorbd_model[0].nb_q, phase=3)
+
 
     for i in range(4):
         x_init[i][4, 0] = 0.08
@@ -557,16 +557,20 @@ def prepare_ocp(
 
     # Define control path constraint
     u_bounds = BoundsList()
-    u_bounds.add([tau_min] * biorbd_model[0].nb_tau, [tau_max] * biorbd_model[0].nb_tau)
-    u_bounds.add([tau_min] * biorbd_model[0].nb_tau, [tau_max] * biorbd_model[0].nb_tau)
-    u_bounds.add([tau_min] * biorbd_model[0].nb_tau, [tau_max] * biorbd_model[0].nb_tau)
-    u_bounds.add([tau_min] * biorbd_model[0].nb_tau, [tau_max] * biorbd_model[0].nb_tau)
+
+    u_bounds.add("tau", min_bound=[tau_min] * biorbd_model[0].nb_tau, max_bound=[tau_max] * biorbd_model[0].nb_tau, phase=0)
+    u_bounds.add("tau", min_bound=[tau_min] * biorbd_model[0].nb_tau, max_bound=[tau_max] * biorbd_model[0].nb_tau, phase=1)
+    u_bounds.add("tau", min_bound=[tau_min] * biorbd_model[0].nb_tau, max_bound=[tau_max] * biorbd_model[0].nb_tau, phase=2)
+    u_bounds.add("tau", min_bound=[tau_min] * biorbd_model[0].nb_tau, max_bound=[tau_max] * biorbd_model[0].nb_tau, phase=3)
+
 
     u_init = InitialGuessList()
-    u_init.add([tau_init] * biorbd_model[0].nb_tau)
-    u_init.add([tau_init] * biorbd_model[0].nb_tau)
-    u_init.add([tau_init] * biorbd_model[0].nb_tau)
-    u_init.add([tau_init] * biorbd_model[0].nb_tau)
+
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
+    u_init.add("tau", [tau_init] * biorbd_model[0].nb_tau, phase=0)
+
 
     return OptimalControlProgram(
         biorbd_model,
